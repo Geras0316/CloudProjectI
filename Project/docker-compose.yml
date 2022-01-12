@@ -1,0 +1,73 @@
+version: "3.7"
+
+services: 
+    mysqldb:
+      container_name: mysqldb
+      build:
+        context: .
+        dockerfile: ./Mysql/Dockerfile
+      image: mysql:5.7
+      volumes:
+        - db_data:/var/lib/mysql
+        #- /var/lib/mysql/mysql.sock:/var/lib/mysql/mysql.sock
+      restart: always
+      environment:
+        MYSQL_ROOT_PASSWORD: pass
+        MYSQL_DATABASE: emqxdb
+        MYSQL_USER: emqx_user
+        MYSQL_PASSWORD: emqxpass
+      ports:
+        - 3306:3306
+      expose:
+        - 3306
+
+    emqx:
+      container_name: emqx
+      build:
+          context: .
+          dockerfile: ./emqx/Dockerfile
+      image: emqx/emqx:4.3.11
+      volumes:
+        - vol-emqx-data:/opt/emqx/data
+        - vol-emqx-etc:/opt/emqx/etc
+        - vol-emqx-log:/opt/emqx/log
+      restart: always
+      environment:
+        EMQX_NAME: foo_emqx
+        EMQX_HOST: 192.168.192.1
+      ports:
+        - 18083:18083   #User Interface
+        - 1883:1883
+        - 8083:8083     #Web socket
+        - 8081:8081     #API
+
+    tensorflow:
+      container_name: tensorflow
+      build: ./Tensorflow
+      image: tensorflow/tensorflow:latest-jupyter
+      restart: always
+      ports:
+        - 8888:8888
+      volumes:
+        - ./Tensorflow:/tf
+
+    rstudio:
+      container_name: rstudio
+      build: ./rstudio
+      image: rocker/rstudio:4.1.2
+      restart: always
+      environment:
+        PASSWORD: rstudio
+      ports:
+        - 8787:8787
+
+volumes:
+    db_data: {}
+    vol-emqx-data:
+      name: foo-emqx-data
+    vol-emqx-etc:
+      name: foo-emqx-etc
+    vol-emqx-log:
+      name: foo-emqx-log
+    #vol-tensorflow:
+    #  name: foo-tensorflow
